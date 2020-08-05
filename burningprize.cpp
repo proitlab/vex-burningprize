@@ -69,7 +69,7 @@ class [[eosio::contract]] burningprize : public eosio::contract {
 
         [[eosio::action]]
         void getversion() {
-            print("BurningPrize SC v1.3 - databisnisid - 20200806\t");
+            print("BurningPrize SC v1.6 - databisnisid - 20200806\t");
         }
 
         [[eosio::action]]
@@ -127,9 +127,11 @@ class [[eosio::contract]] burningprize : public eosio::contract {
                     // get random index from vector allmembers
                     int result = random(total_quantity, allmembers.size());
 
-                    auto itr = _members.find( allmembers    [result].value);
+                    auto itr = _members.find( allmembers[result].value);
 
-                    print("Random Winner ", allmembers[result], " with Win Rate ", itr->quantity.amount / total_quantity * 100, "\t");
+                    auto cow = ( itr->quantity.amount / total_quantity ) * 100;
+
+                    print("Random Winner is ", allmembers[result], " with COW ", cow, "\t");
 
                     
                     // Update table winner

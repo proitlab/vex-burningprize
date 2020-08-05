@@ -1,6 +1,6 @@
 <h1 class="contract">getversion</h1>
 ---
-spec-version: 1.2
+spec-version: 1.6
 title: GetVersion
 summary: This action will return latest version of smart contract.
 icon:
@@ -14,6 +14,6 @@ icon:
 
 <h1 class="contract">randomwinner</h1>
 ---
-spec-version: 1.3
+spec-version: 1.6
 title: RandomWinner
 summary: Randomize the winner base on members table at smart contract at registeronme.

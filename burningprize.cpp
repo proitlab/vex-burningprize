@@ -3,7 +3,6 @@
 #include <eosio/eosio.hpp>
 #include <eosio/system.hpp>
 #include <eosio/time.hpp>
-//#include <eosio/print.hpp>
 #include <vector>
 #include <math.h>
 
@@ -14,7 +13,7 @@ class [[eosio::contract]] burningprize : public eosio::contract {
     using contract::contract;
 
     private:
-        static constexpr symbol vex_symbol = symbol(symbol_code("VEX"), 4);
+        //static constexpr symbol vex_symbol = symbol(symbol_code("VEX"), 4);
         //static constexpr symbol ram_symbol     = symbol(symbol_code("RAM"), 0);
     
         struct account
@@ -58,9 +57,7 @@ class [[eosio::contract]] burningprize : public eosio::contract {
             bool is_final;
 
             uint32_t primary_key()const { return id; }
-            //uint64_t primary_key()const { return account_name.value; }
 
-            //EOSLIB_SERIALIZE( winner, (account_name)(is_final) )
             EOSLIB_SERIALIZE( winner, (id)(account_name)(timestamp)(quantity)(is_final) )
         };
 
@@ -69,7 +66,7 @@ class [[eosio::contract]] burningprize : public eosio::contract {
 
         [[eosio::action]]
         void getversion() {
-            print("BurningPrize SC v1.8 - databisnisid - 20200806\t");
+            print("BurningPrize SC v1.9 - databisnisid - 20200806\t");
         }
 
         [[eosio::action]]
@@ -99,7 +96,7 @@ class [[eosio::contract]] burningprize : public eosio::contract {
 
 
             // if vex.saving is not burn, keep draw the winner
-            if ( vexsaving.balance.amount / 10000 > 1000000 ) { 
+            if ( vexsaving.balance.amount / 10000 > 5000000 ) { // if vex.saving is more than 5M VEX-> not burn yet 
                     members _members("registeronme"_n, "registeronme"_n.value);
 
                     uint64_t total_quantity = 0;
@@ -115,14 +112,7 @@ class [[eosio::contract]] burningprize : public eosio::contract {
                         total_quantity += itr->quantity.amount;
                     }
 
-                    print("Total quantity is ", total_quantity, "\t");
-
-                    /*
-                    for( auto cj = 0; cj < allmembers.size(); cj++ ) {
-                        print(" ", allmembers[cj], " ");
-                    }
-                    */
-                   
+                    print("Total quantity is ", total_quantity, "\t");                 
                    
                     // get random index from vector allmembers
                     int result = random(randomnumber, allmembers.size());
@@ -162,6 +152,8 @@ class [[eosio::contract]] burningprize : public eosio::contract {
                     thewinner _thewinner(get_self(), get_self().value);
                     auto itr1 = _thewinner.find( 1 );
 
+                    name final_winner = itr1->account_name;
+
                     if( itr1 != _thewinner.end() ) {
                         _thewinner.modify( itr1, get_self(), [&](auto &row) {
                             row.is_final = true;
@@ -171,6 +163,26 @@ class [[eosio::contract]] burningprize : public eosio::contract {
                             row.is_final = true;
                         });
                     }
+
+                    // Get account burningprize balance
+                    accounts _accounts("vex.token"_n, "burningprize"_n.value);
+                    const auto sym_name = symbol_code("VEX");
+                    const auto& burningprize = _accounts.get( sym_name.raw() );
+
+                    if ( burningprize.balance.amount / 10000 > 0 ) {
+                        // Do transfer to final_winner
+
+                        asset quantity_final = asset( burningprize.balance.amount, burningprize.balance.symbol ); 
+                        
+                        action(
+                            permission_level{ _self, "active"_n },
+                            "vex.token"_n, "transfer"_n,
+                            std::make_tuple(_self, final_winner, quantity_final, std::string("you are the winner. congratulation"))
+                        ).send();
+
+                        print("Transfer the prize to ", final_winner, " Total Prize ", burningprize.balance);
+                    }
+            
 
             }
 

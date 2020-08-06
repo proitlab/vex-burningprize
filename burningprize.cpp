@@ -55,13 +55,13 @@ class [[eosio::contract]] burningprize : public eosio::contract {
             name account_name;
             uint32_t timestamp;
             asset quantity;
-            //bool is_final;
+            bool is_final;
 
             uint32_t primary_key()const { return id; }
             //uint64_t primary_key()const { return account_name.value; }
 
             //EOSLIB_SERIALIZE( winner, (account_name)(is_final) )
-            EOSLIB_SERIALIZE( winner, (id)(account_name)(timestamp)(quantity) )
+            EOSLIB_SERIALIZE( winner, (id)(account_name)(timestamp)(quantity)(is_final) )
         };
 
         typedef eosio::multi_index< "thewinner"_n, winner > thewinner;
@@ -69,7 +69,7 @@ class [[eosio::contract]] burningprize : public eosio::contract {
 
         [[eosio::action]]
         void getversion() {
-            print("BurningPrize SC v1.6 - databisnisid - 20200806\t");
+            print("BurningPrize SC v1.8 - databisnisid - 20200806\t");
         }
 
         [[eosio::action]]
@@ -87,7 +87,7 @@ class [[eosio::contract]] burningprize : public eosio::contract {
 
 
         [[eosio::action]]
-        void randomwinner() {
+        void randomwinner( uint32_t randomnumber ) {
             require_auth(_self);
 
 
@@ -125,13 +125,13 @@ class [[eosio::contract]] burningprize : public eosio::contract {
                    
                    
                     // get random index from vector allmembers
-                    int result = random(total_quantity, allmembers.size());
+                    int result = random(randomnumber, allmembers.size());
 
                     auto itr = _members.find( allmembers[result].value);
 
                     auto cow = ( itr->quantity.amount / total_quantity ) * 100;
 
-                    print("Random Winner is ", allmembers[result], " with COW ", cow, "\t");
+                    print("Random Winner is ", allmembers[result], " with Random Number ", randomnumber, "\t");
 
                     
                     // Update table winner
@@ -144,6 +144,7 @@ class [[eosio::contract]] burningprize : public eosio::contract {
                             row.timestamp = now();
                             row.quantity.amount = itr->quantity.amount;
                             row.quantity.symbol = itr->quantity.symbol;
+                            row.is_final = false;
                         });
                     } else {
                         _thewinner.emplace( get_self(), [&](auto &row){
@@ -152,6 +153,22 @@ class [[eosio::contract]] burningprize : public eosio::contract {
                             row.timestamp = now();
                             row.quantity.amount = itr->quantity.amount;
                             row.quantity.symbol = itr->quantity.symbol;
+                            row.is_final = false;
+                        });
+                    }
+
+            } else {
+                    // Update table winner
+                    thewinner _thewinner(get_self(), get_self().value);
+                    auto itr1 = _thewinner.find( 1 );
+
+                    if( itr1 != _thewinner.end() ) {
+                        _thewinner.modify( itr1, get_self(), [&](auto &row) {
+                            row.is_final = true;
+                        });
+                    } else {
+                        _thewinner.emplace( get_self(), [&](auto &row){
+                            row.is_final = true;
                         });
                     }
 
